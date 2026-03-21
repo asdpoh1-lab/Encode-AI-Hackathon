@@ -252,12 +252,18 @@ async function callHF(prompt) {
 }
 
 async function judgeWithGemini(question, answers, key) {
-  const parts = Object.entries(answers)
-    .filter(([, v]) => !v.startsWith('Error:'))
-    .map(([k, v]) => `${k}: ${v}`)
-    .join('\n\n');
+  // Shuffle so Gemini doesn't know which answer is its own
+  const models = Object.keys(answers).filter(m => !answers[m].startsWith('Error:'));
+  const shuffled = [...models].sort(() => Math.random() - 0.5);
+  const labels = ['Model A', 'Model B', 'Model C'];
 
-  const judgePrompt = `You are an impartial judge evaluating AI responses.
+  const mapping = {}; // label -> model
+  const parts = shuffled.map((m, i) => {
+    mapping[labels[i]] = m;
+    return `${labels[i]}: ${answers[m]}`;
+  }).join('\n\n');
+
+  const judgePrompt = `You are an impartial judge evaluating AI responses. You do not know which AI produced each answer.
 
 Question: "${question}"
 
@@ -271,13 +277,19 @@ Answers:
 ${parts}
 
 Respond ONLY with valid JSON, no markdown:
-{"gemini":{"accuracy":0,"completeness":0,"clarity":0,"conciseness":0,"reasoning":"one sentence"},"qwen":{"accuracy":0,"completeness":0,"clarity":0,"conciseness":0,"reasoning":"one sentence"}}`;
+{"Model A":{"accuracy":0,"completeness":0,"clarity":0,"conciseness":0,"reasoning":"one sentence"},"Model B":{"accuracy":0,"completeness":0,"clarity":0,"conciseness":0,"reasoning":"one sentence"}}`;
 
   const { text } = await callGemini(judgePrompt, key);
   const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
-}
+  const labeledScores = JSON.parse(clean);
 
+  // Map scores back to real model names
+  const result = {};
+  for (const [label, model] of Object.entries(mapping)) {
+    result[model] = labeledScores[label] || localScore({ [model]: answers[model] })[model];
+  }
+  return result;
+}
 // ── Main run ──────────────────────────────────────────────────────────────────
 async function run() {
   if (running) return;
