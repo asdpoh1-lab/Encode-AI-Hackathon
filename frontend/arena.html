@@ -15,7 +15,6 @@
       --gold:      #f5c542;
       --gold-dim:  #b8922e;
       --silver:    #c0c8d8;
-      --bronze:    #cd7f32;
       --accent:    #4f7cff;
       --red:       #ff5f5f;
       --text:      #e8e8f0;
@@ -62,8 +61,7 @@
     }
     .search-wrap textarea::placeholder { color: var(--muted); }
     .search-wrap textarea:focus { border-color: var(--accent); }
-    .search-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
-    .hint { font-size: .8rem; font-family: var(--font-mono); color: var(--muted); }
+    .search-footer { display: flex; align-items: center; justify-content: flex-end; margin-top: 12px; }
     .btn-run {
       background: var(--gold); color: #0a0a0f; border: none; border-radius: 8px;
       font-family: var(--font-head); font-weight: 700; font-size: .95rem;
@@ -71,18 +69,6 @@
     }
     .btn-run:hover { opacity: .9; transform: translateY(-1px); }
     .btn-run:disabled { opacity: .4; cursor: not-allowed; transform: none; }
-    .config-bar {
-      margin-top: 16px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px 18px; display: none; gap: 12px; flex-direction: column;
-    }
-    .config-bar.open { display: flex; }
-    .config-bar label { font-size: .78rem; font-family: var(--font-mono); color: var(--muted); display: block; margin-bottom: 4px; }
-    .config-bar input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); font-family: var(--font-mono); font-size: .85rem; padding: 8px 12px; outline: none;
-    }
-    .config-bar input:focus { border-color: var(--accent); }
-    .config-toggle { background: none; border: none; color: var(--muted); font-family: var(--font-mono); font-size: .78rem; cursor: pointer; padding: 4px 0; text-decoration: underline; }
     #status { margin-top: 32px; text-align: center; font-family: var(--font-mono); font-size: .9rem; color: var(--muted); min-height: 28px; }
     .spinner {
       display: inline-block; width: 14px; height: 14px;
@@ -132,6 +118,8 @@
     .answer-text.open { display: block; }
     .error-box { background: rgba(255,95,95,.08); border: 1px solid rgba(255,95,95,.25); border-radius: var(--radius); padding: 16px 20px; font-family: var(--font-mono); font-size: .85rem; color: var(--red); }
     .model-error { color: var(--red); font-style: italic; font-size: .82rem; }
+    .models-row { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
+    .model-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 4px 14px; font-size: .78rem; font-family: var(--font-mono); color: var(--muted); }
     footer { margin-top: 60px; text-align: center; font-family: var(--font-mono); font-size: .75rem; color: var(--muted); }
   </style>
 </head>
@@ -141,30 +129,17 @@
     <div class="logo-tag">Agent Olympics · Hackathon Demo</div>
     <h1>Which AI<br>wins your question?</h1>
     <p class="subtitle">Ask anything. Two models compete. One leaderboard.</p>
+    <div class="models-row">
+      <span class="model-chip">Gemini 2.5 Flash</span>
+      <span class="model-chip">vs</span>
+      <span class="model-chip">Qwen 2.5 (72B)</span>
+    </div>
   </header>
 
   <div class="search-wrap">
     <textarea id="question" placeholder="e.g. What is the best way to invest £1000 as a student?"></textarea>
     <div class="search-footer">
-      <div>
-        <button class="config-toggle" id="configToggle">⚙ API keys</button>
-        <span class="hint" style="margin-left:12px">Ctrl+Enter to run</span>
-      </div>
       <button class="btn-run" id="runBtn">⚡ Run competition</button>
-    </div>
-  </div>
-
-  <div class="config-bar" id="configBar">
-    <div>
-      <label>Gemini API key — used for answering + judging (free at aistudio.google.com)</label>
-      <input type="password" id="geminiKey" placeholder="AIza..." />
-    </div>
-    <div>
-      <label>HuggingFace token — Qwen 2.5 72B (free at huggingface.co/settings/tokens)</label>
-      <input type="password" id="hfKey" placeholder="hf_..." />
-    </div>
-    <div style="font-size:.75rem;font-family:var(--font-mono);color:var(--muted)">
-      Keys are saved in your browser. HuggingFace calls go through your local backend.
     </div>
   </div>
 
@@ -178,32 +153,12 @@
 const $ = id => document.getElementById(id);
 let running = false;
 
-$('configToggle').onclick = () => $('configBar').classList.toggle('open');
 $('question').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run(); });
 $('runBtn').onclick = run;
 
 function setStatus(html) { $('status').innerHTML = html; }
 
-function getKeys() {
-  return {
-    gemini: $('geminiKey').value.trim() || localStorage.getItem('ao_gemini') || '',
-    hf:     $('hfKey').value.trim()     || localStorage.getItem('ao_hf')     || '',
-  };
-}
-
-function saveKeys(keys) {
-  if (keys.gemini) localStorage.setItem('ao_gemini', keys.gemini);
-  if (keys.hf)     localStorage.setItem('ao_hf', keys.hf);
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  const g = localStorage.getItem('ao_gemini');
-  const h = localStorage.getItem('ao_hf');
-  if (g) $('geminiKey').value = g;
-  if (h) $('hfKey').value = h;
-});
-
-// ── Local scoring fallback (used when Gemini judge fails) ─────────────────────
+// ── Local scoring fallback ────────────────────────────────────────────────────
 function localScore(answers) {
   const result = {};
   for (const [model, text] of Object.entries(answers)) {
@@ -224,22 +179,20 @@ function localScore(answers) {
   return result;
 }
 
-// ── API calls ─────────────────────────────────────────────────────────────────
-async function callGemini(prompt, key) {
+// ── API calls — all go through backend, no keys in browser ───────────────────
+async function callGemini(prompt) {
   const t0 = Date.now();
-  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${key}`;
-  const res = await fetch(url, {
+  const res = await fetch('/api/gemini-query', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    body: JSON.stringify({ prompt }),
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(json?.error?.message || `Gemini ${res.status}`);
-  const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-  return { text, latency: Date.now() - t0 };
+  if (!res.ok) throw new Error(json?.error || `Gemini ${res.status}`);
+  return { text: json.text, latency: json.latency || (Date.now() - t0) };
 }
 
-async function callHF(prompt) {
+async function callQwen(prompt) {
   const t0 = Date.now();
   const res = await fetch('/api/hf-query', {
     method: 'POST',
@@ -247,17 +200,16 @@ async function callHF(prompt) {
     body: JSON.stringify({ prompt }),
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(json?.error || `HF ${res.status}`);
+  if (!res.ok) throw new Error(json?.error || `Qwen ${res.status}`);
   return { text: json.text, latency: json.latency || (Date.now() - t0) };
 }
 
-async function judgeWithGemini(question, answers, key) {
-  // Shuffle so Gemini doesn't know which answer is its own
+async function judgeWithGemini(question, answers) {
   const models = Object.keys(answers).filter(m => !answers[m].startsWith('Error:'));
   const shuffled = [...models].sort(() => Math.random() - 0.5);
-  const labels = ['Model A', 'Model B', 'Model C'];
+  const labels = ['Model A', 'Model B'];
 
-  const mapping = {}; // label -> model
+  const mapping = {};
   const parts = shuffled.map((m, i) => {
     mapping[labels[i]] = m;
     return `${labels[i]}: ${answers[m]}`;
@@ -279,57 +231,47 @@ ${parts}
 Respond ONLY with valid JSON, no markdown:
 {"Model A":{"accuracy":0,"completeness":0,"clarity":0,"conciseness":0,"reasoning":"one sentence"},"Model B":{"accuracy":0,"completeness":0,"clarity":0,"conciseness":0,"reasoning":"one sentence"}}`;
 
-  const { text } = await callGemini(judgePrompt, key);
+  const { text } = await callGemini(judgePrompt);
   const clean = text.replace(/```json|```/g, '').trim();
   const labeledScores = JSON.parse(clean);
 
-  // Map scores back to real model names
   const result = {};
   for (const [label, model] of Object.entries(mapping)) {
     result[model] = labeledScores[label] || localScore({ [model]: answers[model] })[model];
   }
   return result;
 }
+
 // ── Main run ──────────────────────────────────────────────────────────────────
 async function run() {
   if (running) return;
   const question = $('question').value.trim();
   if (question.length < 5) { setStatus('Please enter a question first.'); return; }
 
-  const keys = getKeys();
-  saveKeys(keys);
-
-  if (!keys.gemini) {
-    $('results').innerHTML = `<div class="error-box">Gemini API key is required. Click API keys above.</div>`;
-    $('configBar').classList.add('open');
-    return;
-  }
-
   running = true;
   $('runBtn').disabled = true;
   $('results').innerHTML = '';
   setStatus('<span class="spinner"></span>Sending question to all models simultaneously...');
 
-  const [geminiRes, hfRes] = await Promise.allSettled([
-    callGemini(question, keys.gemini),
-    callHF(question),
+  const [geminiRes, qwenRes] = await Promise.allSettled([
+    callGemini(question),
+    callQwen(question),
   ]);
 
   const answers = {
     gemini: geminiRes.status === 'fulfilled' ? geminiRes.value.text : `Error: ${geminiRes.reason?.message}`,
-    qwen:   hfRes.status     === 'fulfilled' ? hfRes.value.text     : `Error: ${hfRes.reason?.message}`,
+    qwen:   qwenRes.status   === 'fulfilled' ? qwenRes.value.text   : `Error: ${qwenRes.reason?.message}`,
   };
   const latencies = {
     gemini: geminiRes.status === 'fulfilled' ? geminiRes.value.latency : 0,
-    qwen:   hfRes.status     === 'fulfilled' ? hfRes.value.latency     : 0,
+    qwen:   qwenRes.status   === 'fulfilled' ? qwenRes.value.latency   : 0,
   };
 
   setStatus('<span class="spinner"></span>Judging answers...');
 
   let scores;
   try {
-    scores = await judgeWithGemini(question, answers, keys.gemini);
-    // Make sure both keys exist in scores
+    scores = await judgeWithGemini(question, answers);
     if (!scores.gemini) scores.gemini = localScore({ gemini: answers.gemini }).gemini;
     if (!scores.qwen)   scores.qwen   = localScore({ qwen: answers.qwen }).qwen;
   } catch(e) {
@@ -341,24 +283,19 @@ async function run() {
   running = false;
   $('runBtn').disabled = false;
 
-  const LABELS  = { gemini: 'Gemini 2.5 Flash', qwen: 'Qwen 2.5 (72B)' };
-  const MEDALS  = ['🥇', '🥈'];
+  const LABELS = { gemini: 'Gemini 2.5 Flash', qwen: 'Qwen 2.5 (72B)' };
+  const MEDALS = ['🥇', '🥈'];
 
   const rows = ['gemini', 'qwen'].map(m => {
     const s = scores[m] || { accuracy: 0, completeness: 0, clarity: 0, conciseness: 0, reasoning: 'No score' };
     return {
-      model: m,
-      label: LABELS[m],
-      answer: answers[m],
-      latency: latencies[m],
-      scores: s,
-      total: s.accuracy + s.completeness + s.clarity + s.conciseness,
+      model: m, label: LABELS[m], answer: answers[m], latency: latencies[m],
+      scores: s, total: s.accuracy + s.completeness + s.clarity + s.conciseness,
       isError: (answers[m] || '').startsWith('Error:'),
     };
   }).sort((a, b) => b.total - a.total);
 
   rows.forEach((r, i) => r.rank = i + 1);
-
   const shortQ = question.length > 60 ? question.slice(0, 57) + '...' : question;
 
   $('results').innerHTML = `
@@ -366,7 +303,6 @@ async function run() {
       <h2>Leaderboard</h2>
       <span class="q-display">"${shortQ}"</span>
     </div>
-
     <div class="podium" style="grid-template-columns:repeat(${rows.length},1fr)">
       ${rows.map((r, i) => `
         <div class="podium-card rank-${r.rank}" style="animation-delay:${i * 80}ms">
@@ -381,7 +317,6 @@ async function run() {
         </div>
       `).join('')}
     </div>
-
     <div class="breakdown-grid">
       ${rows.map((r, i) => `
         <div class="breakdown-card rank-${r.rank}" style="animation-delay:${200 + i * 100}ms">

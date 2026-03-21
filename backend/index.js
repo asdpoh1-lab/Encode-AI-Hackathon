@@ -11,6 +11,7 @@ const {
   parseTaskIdsJson,
 } = require('./routes');
 const hfProxy = require('./hf-proxy');
+const geminiProxy = require('./gemini-proxy');
 const { validateSubmitResults, normalizeAgentNameForClaim } = require('./submitValidation');
 const heatStore = require('./heatStore');
 
@@ -19,6 +20,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api', hfProxy);
+app.use('/api', geminiProxy);
 
 const db = initDb();
 app.set('db', db);
