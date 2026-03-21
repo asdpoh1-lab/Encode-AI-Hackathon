@@ -306,13 +306,10 @@ function getSelectedModels() {
     .filter(cb => cb.checked).map(cb => cb.dataset.model);
 }
 
-document.querySelectorAll('.model-option').forEach(opt => {
-  opt.addEventListener('click', () => {
-    const cb = opt.querySelector('input[type=checkbox]');
-    cb.checked = !cb.checked;
-    opt.classList.toggle('selected', cb.checked);
-    const count = getSelectedModels().length;
-    $('modelWarn').style.display = count < 2 ? 'block' : 'none';
+document.querySelectorAll('.model-option input[type=checkbox]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.closest('.model-option').classList.toggle('selected', cb.checked);
+    $('modelWarn').style.display = getSelectedModels().length < 2 ? 'block' : 'none';
   });
 });
 
