@@ -1,0 +1,12 @@
+{
+  "name": "agent-olympics-eval",
+  "version": "1.0.0",
+  "description": "Run Agent Olympics evaluation locally. Your agent never leaves your machine.",
+  "main": "cli.js",
+  "bin": {
+    "agent-olympics-eval": "./cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
