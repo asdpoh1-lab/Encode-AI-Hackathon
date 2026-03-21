@@ -31,14 +31,19 @@ function renderCards(leaderboard) {
   }
   el.innerHTML = list
     .map(
-      (a) => `
+      (a, i) => {
+        const rank = i + 1;
+        const rankClass = rank <= 3 ? ` card-rank-${rank}` : '';
+        return `
     <div class="card${a.is_benchmark ? ' card-benchmark' : ''}" data-id="${escapeHtml(a.id)}">
+      <span class="card-rank${rankClass}">${rank}</span>
       <span class="card-name">${escapeHtml(a.name)}</span>
       <span class="card-score">Score: ${a.score}</span>
       <span class="card-speed">Speed: ${a.speed}</span>
       <span class="card-variance">Variance: ${a.variance}</span>
     </div>
-  `
+  `;
+      }
     )
     .join('');
 }
@@ -98,6 +103,11 @@ function updateHeatUI(st) {
     badge.textContent = st.status;
     badge.className = 'heat-badge heat-status-' + String(st.status).toLowerCase();
   }
+
+  // Add state classes to panel for CSS animations
+  panel.classList.remove('heat-live', 'heat-countdown-state');
+  if (st.status === 'LIVE') panel.classList.add('heat-live');
+  if (st.status === 'COUNTDOWN') panel.classList.add('heat-countdown-state');
 
   if (cd) {
     if (st.status === 'COUNTDOWN' && st.countdown_seconds != null) {

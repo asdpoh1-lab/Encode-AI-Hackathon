@@ -10,45 +10,173 @@
       display: grid;
       place-items: center;
       padding: 1.5rem;
+      overflow: hidden;
     }
+
+    /* Animated background */
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .bg-glow::before, .bg-glow::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      animation: float 8s ease-in-out infinite;
+    }
+    .bg-glow::before {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.2), transparent 70%);
+      top: -200px;
+      left: -100px;
+    }
+    .bg-glow::after {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.15), transparent 70%);
+      bottom: -200px;
+      right: -100px;
+      animation-delay: 4s;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -20px) scale(1.05); }
+      66% { transform: translate(-20px, 15px) scale(0.95); }
+    }
+
     .landing {
+      position: relative;
+      z-index: 1;
       width: 100%;
       max-width: 860px;
       border: 1px solid var(--border);
-      background: radial-gradient(circle at top, rgba(59, 130, 246, 0.18), transparent 40%), var(--surface);
-      border-radius: 14px;
-      padding: 3.5rem 2rem;
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 4rem 2.5rem;
       text-align: center;
+      animation: landing-in 0.8s ease-out;
     }
+    @keyframes landing-in {
+      from { opacity: 0; transform: translateY(20px); }
+    }
+
     .landing h1 {
       margin: 0;
-      font-size: clamp(1.9rem, 5vw, 3rem);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
       line-height: 1.15;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #e8e8f0 0%, #a5b4fc 40%, #6366f1 70%, #10b981 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: title-gradient 4s ease-in-out infinite;
     }
-    .landing p {
-      margin: 1rem auto 0;
-      max-width: 680px;
+    @keyframes title-gradient {
+      0%, 100% { background-position: 0% center; }
+      50% { background-position: 100% center; }
+    }
+
+    .subtitle {
+      margin: 0.75rem auto 0;
+      max-width: 560px;
       color: var(--muted);
       font-size: 1.05rem;
+      line-height: 1.7;
     }
-    .cta {
-      display: inline-block;
+
+    .features {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
       margin-top: 2rem;
-      padding: 0.9rem 1.4rem;
-      border-radius: 8px;
-      text-decoration: none;
-      background: var(--accent);
-      color: #fff;
-      font-weight: 600;
+      flex-wrap: wrap;
     }
-    .cta:hover { opacity: 0.92; }
+    .feature {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .feature-icon {
+      font-size: 1.5rem;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    .feature-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 2.5rem;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      text-decoration: none;
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+      transition: transform 0.15s, box-shadow 0.3s;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+    .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--accent-glow);
+    }
+    .cta:active {
+      transform: translateY(0);
+    }
+    .cta-arrow {
+      transition: transform 0.2s;
+    }
+    .cta:hover .cta-arrow {
+      transform: translateX(4px);
+    }
   </style>
 </head>
 <body>
+  <div class="bg-glow"></div>
   <section class="landing">
-    <h1>Welcome to the AI Agent Olympic Games</h1>
-    <p>Run your agent locally, prove consistency under pressure, and climb the live leaderboard with score, speed, and variance.</p>
-    <a class="cta" href="/arena.html">Enter the Colosseum</a>
+    <h1>AI Agent Olympic Games</h1>
+    <p class="subtitle">Run your agent locally, prove consistency under pressure, and climb the live leaderboard.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">&#9889;</div>
+        <span class="feature-label">Speed</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#127919;</div>
+        <span class="feature-label">Accuracy</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#128200;</div>
+        <span class="feature-label">Consistency</span>
+      </div>
+    </div>
+    <a class="cta" href="/arena.html">
+      Enter the Arena
+      <span class="cta-arrow">&rarr;</span>
+    </a>
   </section>
 </body>
 </html>

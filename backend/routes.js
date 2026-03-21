@@ -35,8 +35,8 @@ function submitResult(db, agentName, results, heatId) {
     'INSERT INTO agents (id, name, webhook_url, is_benchmark) VALUES (?, ?, ?, 0)'
   ).run(id, agentName, '');
   const insertRun = db.prepare(`
-    INSERT INTO runs (agent_id, task_id, run_index, response_text, latency_ms, score, heat_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO runs (agent_id, task_id, run_index, response_text, latency_ms, score, heat_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const getTask = db.prepare(
     'SELECT id, prompt, context, expected_type, expected_value FROM tasks WHERE id = ?'
@@ -57,7 +57,7 @@ function submitResult(db, agentName, results, heatId) {
       }
       score = scoreRun(task, { ok: true, body });
     }
-    insertRun.run(id, taskId, runIndex, responseText, latencyMs, score, heatId);
+    insertRun.run(id, taskId, runIndex, responseText, latencyMs, score, heatId, new Date().toISOString());
   }
   return { id, name: agentName };
 }

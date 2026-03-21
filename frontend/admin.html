@@ -42,6 +42,7 @@
       font-size: 0.9rem;
     }
     button:hover { border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     button.danger { border-color: var(--danger); color: #fca5a5; }
     .summary {
@@ -57,24 +58,110 @@
       overflow: auto;
     }
     .err { color: #fca5a5; margin-top: 0.5rem; }
+
+    /* Login overlay */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .login-box h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.15rem;
+    }
+    .login-box p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 0 0 1.25rem;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 0.65rem;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .login-err {
+      color: #fca5a5;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      min-height: 1.2em;
+    }
+    .logout-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 0.75rem;
+    }
+    .logout-btn:hover { border-color: var(--danger); color: #fca5a5; }
+    .header-row { display: flex; align-items: center; }
   </style>
 </head>
 <body>
-  <h1>Agent Olympics — Heat admin</h1>
-  <p class="sub">Not linked from the public site. Set <code>VITE_ADMIN_TOKEN</code> in frontend env (same value as backend <code>HEATS_ADMIN_SECRET</code>).</p>
 
-  <div class="grid">
-    <button type="button" class="primary" id="btn-open">Open heat</button>
-    <button type="button" class="primary" id="btn-start">Start countdown</button>
-    <button type="button" class="primary" id="btn-force-live">Force LIVE</button>
-    <button type="button" class="primary" id="btn-force-complete">Force COMPLETE</button>
-    <button type="button" class="danger" id="btn-reset">Reset → WAITING</button>
-    <button type="button" id="btn-summary-now">Refresh summary</button>
+  <!-- Login overlay -->
+  <div class="login-overlay" id="login-overlay">
+    <div class="login-box">
+      <h2>Admin Login</h2>
+      <p>Enter the admin password (HEATS_ADMIN_SECRET from the backend)</p>
+      <input type="password" id="login-password" placeholder="Admin password" autofocus />
+      <button type="button" id="login-btn">Login</button>
+      <p class="login-err" id="login-err"></p>
+    </div>
   </div>
 
-  <h2 style="font-size:1rem;margin:0 0 0.5rem;color:var(--muted)">Summary (auto every 2s)</h2>
-  <pre class="summary" id="summary">Loading…</pre>
-  <p class="err" id="err"></p>
+  <!-- Admin content (hidden until authenticated) -->
+  <div id="admin-content" style="display: none;">
+    <div class="header-row">
+      <h1>Agent Olympics — Heat admin</h1>
+      <button type="button" class="logout-btn" id="logout-btn">Logout</button>
+    </div>
+    <p class="sub">Controls for managing heats. Password is stored locally in your browser.</p>
+
+    <div class="grid">
+      <button type="button" class="primary" id="btn-open">Open heat</button>
+      <button type="button" class="primary" id="btn-start">Start countdown</button>
+      <button type="button" class="primary" id="btn-force-live">Force LIVE</button>
+      <button type="button" class="primary" id="btn-force-complete">Force COMPLETE</button>
+      <button type="button" class="danger" id="btn-reset">Reset → WAITING</button>
+      <button type="button" id="btn-summary-now">Refresh summary</button>
+    </div>
+
+    <h2 style="font-size:1rem;margin:0 0 0.5rem;color:var(--muted)">Summary (auto every 2s)</h2>
+    <pre class="summary" id="summary">Loading…</pre>
+    <p class="err" id="err"></p>
+  </div>
 
   <script type="module" src="/admin.js"></script>
 </body>
