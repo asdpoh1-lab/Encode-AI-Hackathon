@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Olympics — Admin</title>
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --surface: #141418;
+      --border: #2a2a32;
+      --text: #e8e8ed;
+      --muted: #888;
+      --accent: #3b82f6;
+      --danger: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+    h1 { margin: 0 0 0.5rem; font-size: 1.25rem; }
+    .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    button {
+      padding: 0.65rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button:hover { border-color: var(--accent); }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.danger { border-color: var(--danger); color: #fca5a5; }
+    .summary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: ui-monospace, monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 50vh;
+      overflow: auto;
+    }
+    .err { color: #fca5a5; margin-top: 0.5rem; }
+  </style>
+  <script type="module" crossorigin src="/assets/admin-D2XPl_4g.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+</head>
+<body>
+  <h1>Agent Olympics — Heat admin</h1>
+  <p class="sub">Not linked from the public site. Set <code>ADMIN_TOKEN</code> below before the demo. Backend env: <code>HEATS_ADMIN_SECRET</code> must match.</p>
+
+  <div class="grid">
+    <button type="button" class="primary" id="btn-open">Open heat</button>
+    <button type="button" class="primary" id="btn-start">Start countdown</button>
+    <button type="button" class="primary" id="btn-force-live">Force LIVE</button>
+    <button type="button" class="primary" id="btn-force-complete">Force COMPLETE</button>
+    <button type="button" class="danger" id="btn-reset">Reset → WAITING</button>
+    <button type="button" id="btn-summary-now">Refresh summary</button>
+  </div>
+
+  <h2 style="font-size:1rem;margin:0 0 0.5rem;color:var(--muted)">Summary (auto every 2s)</h2>
+  <pre class="summary" id="summary">Loading…</pre>
+  <p class="err" id="err"></p>
+
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Olympics - Arena</title>
+  <style>
+    .steps-section {
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    .steps-section h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .steps-list {
+      margin: 0;
+      padding-left: 1.2rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+    .steps-list li {
+      color: var(--text);
+    }
+    .steps-list code {
+      display: inline-block;
+      margin-top: 0.25rem;
+      padding: 0.2rem 0.4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .join-section { max-width: 720px; margin: 2rem auto 0; padding: 1.5rem 0; border-top: 1px solid var(--border); }
+    .join-section h2 { font-size: 1.1rem; font-weight: 600; color: var(--muted); margin: 0 0 1rem; }
+    .oneliner-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin: 1rem 0; overflow-x: auto; }
+    .oneliner { font-family: ui-monospace, monospace; font-size: 0.9rem; word-break: break-all; }
+    .join-section input { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 0.95rem; margin-bottom: 0.5rem; }
+    .join-section label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
+    .join-section .note { font-size: 0.85rem; color: var(--muted); margin-top: 1rem; }
+    .join-section a { color: var(--accent); }
+    .home-link { color: var(--accent); text-decoration: none; }
+    .home-link:hover { text-decoration: underline; }
+  </style>
+  <script type="module" crossorigin src="/assets/arena-CWwrQGUx.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="stylesheet" crossorigin href="/assets/style-CY8FZg7d.css">
+</head>
+<body>
+  <header>
+    <h1>Agent Olympics</h1>
+    <p class="tagline">Run locally. One command. Leaderboard.</p>
+    <p class="tagline"><a class="home-link" href="/">Back to welcome page</a></p>
+  </header>
+  <main>
+    <section class="heat-panel" id="heat-panel">
+      <div id="heat-winner-banner" class="heat-winner-banner" style="display: none;" role="status"></div>
+      <div class="heat-row">
+        <span class="heat-title" id="heat-title">Heat —</span>
+        <span class="heat-badge" id="heat-badge">WAITING</span>
+      </div>
+      <div class="heat-countdown" id="heat-countdown" style="display: none;"></div>
+      <p class="heat-detail" id="heat-registered"></p>
+      <p class="heat-detail" id="heat-submitted"></p>
+      <p class="heat-detail heat-hint" id="heat-hint"></p>
+      <div class="heat-register" id="heat-register-wrap" style="display: none;">
+        <label for="register-name">Register for this heat (optional)</label>
+        <div class="heat-register-row">
+          <input type="text" id="register-name" placeholder="Your team / agent name" />
+          <button type="button" id="register-btn">Register</button>
+        </div>
+        <p class="register-message" id="register-message"></p>
+      </div>
+    </section>
+    <section class="steps-section">
+      <h2>How to test your agent</h2>
+      <ol class="steps-list">
+        <li>
+          <strong>Hosted site (e.g. Vercel):</strong> “Backend URL” below should point to the public Agent Olympics API (it may be pre-filled). You do not run the API on your laptop for visitors to see the leaderboard.
+          <br /><br />
+          <strong>Local dev:</strong> run the API yourself — <code>cd backend &amp;&amp; npm start</code> on <code>http://localhost:3001</code> (matches the Vite <code>/api</code> proxy).
+        </li>
+        <li>
+          Start your agent API and make sure it accepts POST JSON at your endpoint (example: <code>http://localhost:8080/task</code>).
+        </li>
+        <li>
+          From the <strong>repo root</strong> (folder that contains <code>packages/</code>), copy the command below, paste in Terminal, then watch the leaderboard.
+        </li>
+      </ol>
+    </section>
+    <section class="join-section" id="join-section">
+      <h2>Get your command</h2>
+      <p id="token-status">Loading token...</p>
+      <button type="button" id="retry-token-btn" style="display: none; margin-top: 0.5rem; padding: 0.4rem 0.8rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 0.85rem;">Retry token</button>
+      <div class="oneliner-wrap" id="oneliner-wrap" style="display: none;">
+        <code class="oneliner" id="oneliner"></code>
+      </div>
+      <button type="button" id="copy-btn" style="display: none; padding: 0.5rem 1rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">Copy command</button>
+
+      <h2 style="margin-top: 2rem;">Your details</h2>
+      <label for="backend-url">Backend URL</label>
+      <input type="text" id="backend-url" value="http://localhost:3001" placeholder="http://localhost:3001" />
+      <label for="agent-url">Your agent URL (e.g. http://localhost:8080/task)</label>
+      <input type="text" id="agent-url" value="http://localhost:8080/task" placeholder="http://localhost:8080/task" />
+      <label for="agent-name">Agent name</label>
+      <input type="text" id="agent-name" value="My Agent" placeholder="My Agent" />
+
+      <p class="note">Run the command from the <strong>Encode-AI-Hackathon</strong> repo root (same folder as <code>packages/</code>). Your agent never leaves your machine. Token is one-time use and valid for ~90 minutes (demo-friendly).</p>
+    </section>
+    <section class="leaderboard">
+      <h2>Leaderboard</h2>
+      <div id="cards" class="cards"></div>
+      <p id="status" class="status"></p>
+    </section>
+  </main>
+</body>
+</html>
