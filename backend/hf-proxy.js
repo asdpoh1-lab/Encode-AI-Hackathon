@@ -17,7 +17,7 @@ router.post('/hf-query', async (req, res) => {
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: 'Qwen/Qwen2.5-72B-Instruct',
+        model: 'deepseek-ai/DeepSeek-R1',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 512,
         provider: { order: ['sambanova'] },
