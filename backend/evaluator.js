@@ -1,3 +1,8 @@
+/**
+ * Legacy server-side evaluator (webhook → tasks → scored runs).
+ * Not mounted by `index.js`; the hackathon flow uses the CLI + `POST /submit-result` instead.
+ * Kept as reference or for future “evaluate registered webhook” features.
+ */
 const { runTaskThreeTimes } = require('./dispatcher');
 const { scoreRun } = require('./scoreRun');
 const { seedTasks } = require('./seedTasks');

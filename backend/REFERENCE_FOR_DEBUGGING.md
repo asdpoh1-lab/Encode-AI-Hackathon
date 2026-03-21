@@ -1,27 +1,29 @@
 # Agent Olympics backend – reference for debugging
 
-**Single flow:** Local-only. CLI fetches tasks, runs them against the user’s agent, and POSTs raw results. Backend scores and stores.
+**Single flow:** Local-only. CLI fetches tasks for a **LIVE** heat, runs them against the user’s agent, and POSTs raw results with **`heat_id`**. Backend scores and stores.
 
 ---
 
-## API
+## API (high level)
 
 | Endpoint | Purpose |
 |----------|---------|
-| GET /tasks | Returns task list (seeds if needed). Used by CLI. |
-| GET /leaderboard | Aggregated leaderboard (score, speed, variance per agent). |
-| GET /leaderboard/stream | SSE; sends `{ type: 'leaderboard' }` when leaderboard changes. |
-| GET /get-submit-token | Returns `{ token, expiresIn }`. Token valid ~90 minutes (demo TTL), single use. |
-| POST /submit-result | Body: `{ token, agent_name, results }`. Each result: `{ task_id, run_index, response_text, latency_ms }`. Backend scores with `scoreRun.js` and inserts runs. |
+| GET /heat/status | Current heat: `heat_id`, `status`, timers, `registered_count`, `submitted_count`. |
+| GET /tasks?heat_id= | Task list for that heat (**LIVE** only). CLI uses this. |
+| GET /leaderboard | Aggregated leaderboard; optional `?heat_id=` (see README). Rows include **`score_numeric`**. |
+| GET /heat/winner | After **COMPLETE**: winner fields, or **`no_eligible_human_winner: true`**. |
+| GET /leaderboard/stream | SSE; `{ type: 'leaderboard', agentId? }` on updates. |
+| GET /get-submit-token | `{ token, expiresIn }`. Token reserved at submit start, consumed after successful DB commit (stored in SQLite `submit_tokens`). |
+| POST /submit-result | Body: `{ token, agent_name, heat_id, results[] }`. Validated with `submitValidation.js`; name uniqueness per heat via **`heat_name_claims`** (409 on duplicate). |
 
 ---
 
 ## POST /submit-result (scoring)
 
-- Consume token; create agent with `webhook_url = ''`.
-- For each result: load task by `task_id`; parse `response_text` as JSON (or `{ response: response_text }`); call `scoreRun(task, { ok: true, body })`; insert run with that score and `response_text`.
-
-Scoring lives in **scoreRun.js** only (exact, contains, json_keys, code_add). See [scoreRun.js](scoreRun.js) and [TASKS_WE_RUN.md](TASKS_WE_RUN.md).
+- **Token:** `reserveSubmitToken` before DB work; on any validation failure or DB error before commit, `releaseSubmitToken`. Successful path keeps token consumed.
+- **Transaction:** `INSERT heat_name_claims` + `submitResult()` in one `db.transaction()` (atomic name claim + agent + runs).
+- **Validation:** `parseTaskIdsJson` for `heats.task_ids`; `validateSubmitResults` enforces exact count, `run_index` 1–3, full grid, no duplicates, task ids in heat list.
+- **Scoring:** For each result, `scoreRun.js` (same as always). See [TASKS_WE_RUN.md](TASKS_WE_RUN.md).
 
 ---
 
@@ -29,17 +31,18 @@ Scoring lives in **scoreRun.js** only (exact, contains, json_keys, code_add). Se
 
 - **Method:** POST  
 - **Headers:** `Content-Type: application/json`  
-- **Body (JSON):** `{ "task_id": "task_1", "prompt": "...", "context": null }`  
+- **Body (JSON):** `{ "task_id": "…", "prompt": "…", "context": null }`  
 - **Per task:** 3 requests (200 ms between them).  
-- **Timeout:** 30 seconds per request (CLI and backend use 30s where applicable).
+- **Timeout:** 30 seconds per request (CLI).
 
-Agent should return JSON with the answer in a field we can read: `response`, `content`, `output`, `text`, `result`, `message`, or `answer`. Example: `{ "response": "hello" }`.
+Agent should return JSON with the answer in a field we can read: `response`, `content`, `output`, `text`, `result`, `message`, or `answer`.
 
 ---
 
-## Debug
+## Debug & ops
 
-- **GET /debug/runs/:agentId** — Last 30 runs for an agent (task_id, run_index, score, latency_ms, response_preview).
-- Backend logs: check for errors on submit-result or DB.
+- **GET /debug/runs/:agentId** — Last 30 runs (`heat_id` included).
+- **Foreign keys:** `PRAGMA foreign_keys = ON`; `runs.heat_id` references `heats(id)` (orphan `heat_id` values are cleared on migration).
+- **Existing DBs:** Run **`node backend/scripts/backfill-heat-name-claims.js`** once if you need `heat_name_claims` aligned with historical human submits.
 
-If the CLI fails to fetch tasks or submit: ensure the backend is running and reachable at the `--backend` URL.
+If the CLI fails to fetch tasks or submit: ensure the backend is running, heat is **LIVE**, and `--backend` / `--heat` match `GET /heat/status`.

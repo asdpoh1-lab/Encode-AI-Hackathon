@@ -1,3 +1,6 @@
+/**
+ * HTTP helper used by `evaluator.js` only — not part of the Express API surface in `index.js`.
+ */
 const WEBHOOK_TIMEOUT_MS = 30000;
 
 function postTask(webhookUrl, payload) {

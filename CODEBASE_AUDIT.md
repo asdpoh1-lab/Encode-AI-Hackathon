@@ -9,9 +9,9 @@
 ```
 Encode-AI-Hackathon/
 ├── backend/           # Node + Express + SQLite
-│   ├── index.js       # HTTP routes: GET /tasks, /leaderboard, /leaderboard/stream, /get-submit-token, POST /submit-result; token store; SSE
-│   ├── db.js          # SQLite schema (agents, tasks, runs)
-│   ├── routes.js      # getTasks, submitResult (scores on server), getLeaderboard
+│   ├── index.js       # HTTP routes: heats, GET /tasks?heat_id=, leaderboard, SSE, tokens, POST /submit-result, admin
+│   ├── db.js          # SQLite schema (agents, tasks, runs, heats, migrations)
+│   ├── routes.js      # getTasksForHeat, submitResult (scores on server), getLeaderboard, winner helpers
 │   ├── scoreRun.js    # Single source of truth for scoring (exact, contains, json_keys, code_add)
 │   ├── seedTasks.js   # 5 tasks array + seed DB
 │   ├── data/          # agentolympics.db (created at runtime)

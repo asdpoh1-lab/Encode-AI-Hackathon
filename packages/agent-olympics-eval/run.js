@@ -1,8 +1,18 @@
 const TIMEOUT_MS = 30000;
 
-async function fetchTasks(backendBase) {
-  const res = await fetch(`${backendBase}/tasks`);
-  if (!res.ok) throw new Error(`Failed to fetch tasks: ${res.statusText}`);
+async function fetchHeatStatus(backendBase) {
+  const res = await fetch(`${backendBase}/heat/status`);
+  if (!res.ok) throw new Error(`Failed to fetch heat status: ${res.statusText}`);
+  return res.json();
+}
+
+async function fetchTasks(backendBase, heatId) {
+  const res = await fetch(`${backendBase}/tasks?heat_id=${encodeURIComponent(heatId)}`);
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({}));
+    const msg = errBody.error || res.statusText;
+    throw new Error(msg);
+  }
   return res.json();
 }
 
@@ -34,8 +44,19 @@ async function postTask(agentUrl, payload) {
   }
 }
 
-async function runEvaluation(agentUrl, backendBase, onProgress) {
-  const tasks = await fetchTasks(backendBase);
+async function runEvaluation(agentUrl, backendBase, heatId, onProgress) {
+  const status = await fetchHeatStatus(backendBase);
+  if (status.status !== 'LIVE' || status.heat_id !== heatId) {
+    throw new Error(
+      'No active heat — wait for the host to start the heat (status must be LIVE and heat_id must match).'
+    );
+  }
+
+  const tasks = await fetchTasks(backendBase, heatId);
+  if (!tasks.length) {
+    throw new Error('No tasks for this heat.');
+  }
+
   const results = [];
   for (let t = 0; t < tasks.length; t++) {
     const task = tasks[t];
@@ -60,4 +81,4 @@ async function runEvaluation(agentUrl, backendBase, onProgress) {
   return results;
 }
 
-module.exports = { runEvaluation, fetchTasks };
+module.exports = { runEvaluation, fetchTasks, fetchHeatStatus };

@@ -57,6 +57,25 @@
     <p class="tagline"><a class="home-link" href="/">Back to welcome page</a></p>
   </header>
   <main>
+    <section class="heat-panel" id="heat-panel">
+      <div id="heat-winner-banner" class="heat-winner-banner" style="display: none;" role="status"></div>
+      <div class="heat-row">
+        <span class="heat-title" id="heat-title">Heat —</span>
+        <span class="heat-badge" id="heat-badge">WAITING</span>
+      </div>
+      <div class="heat-countdown" id="heat-countdown" style="display: none;"></div>
+      <p class="heat-detail" id="heat-registered"></p>
+      <p class="heat-detail" id="heat-submitted"></p>
+      <p class="heat-detail heat-hint" id="heat-hint"></p>
+      <div class="heat-register" id="heat-register-wrap" style="display: none;">
+        <label for="register-name">Register for this heat (optional)</label>
+        <div class="heat-register-row">
+          <input type="text" id="register-name" placeholder="Your team / agent name" />
+          <button type="button" id="register-btn">Register</button>
+        </div>
+        <p class="register-message" id="register-message"></p>
+      </div>
+    </section>
     <section class="steps-section">
       <h2>How to test your agent</h2>
       <ol class="steps-list">
