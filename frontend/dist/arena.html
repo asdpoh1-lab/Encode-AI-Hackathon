@@ -3,121 +3,608 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agent Olympics - Arena</title>
+  <title>Agent Olympics — AI Evaluation Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
   <style>
-    .steps-section {
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 1.5rem;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #13131a;
+      --surface2:  #1a1a24;
+      --border:    #22222e;
+      --gold:      #f5c542;
+      --gold-dim:  #b8922e;
+      --silver:    #c0c8d8;
+      --accent:    #4f7cff;
+      --green:     #3ddc97;
+      --red:       #ff5f5f;
+      --text:      #e8e8f0;
+      --muted:     #6b6b80;
+      --radius:    12px;
+      --font-head: 'Syne', sans-serif;
+      --font-mono: 'DM Mono', monospace;
     }
-    .steps-section h2 {
-      margin: 0 0 0.75rem;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--muted);
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-head); min-height: 100vh; overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(79,124,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(79,124,255,.04) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none; z-index: 0;
     }
-    .steps-list {
-      margin: 0;
-      padding-left: 1.2rem;
-      display: grid;
-      gap: 0.75rem;
+    .page { position: relative; z-index: 1; max-width: 920px; margin: 0 auto; padding: 0 24px 80px; }
+
+    header { padding: 48px 0 32px; text-align: center; }
+    .logo-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(245,197,66,.08); border: 1px solid rgba(245,197,66,.2);
+      border-radius: 100px; padding: 4px 14px; font-size: 11px;
+      font-family: var(--font-mono); color: var(--gold);
+      letter-spacing: .08em; text-transform: uppercase; margin-bottom: 20px;
     }
-    .steps-list li {
-      color: var(--text);
+    .logo-tag::before { content: '🏆'; }
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 800; line-height: 1.05; letter-spacing: -.02em;
+      background: linear-gradient(135deg, #fff 0%, var(--silver) 60%, var(--gold) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .steps-list code {
-      display: inline-block;
-      margin-top: 0.25rem;
-      padding: 0.2rem 0.4rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-family: ui-monospace, monospace;
-      font-size: 0.85rem;
-      color: var(--text);
-      word-break: break-all;
+    .subtitle { margin-top: 10px; color: var(--muted); font-size: .9rem; font-family: var(--font-mono); }
+
+    .config-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+    .config-panel h3 { font-size: .85rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+
+    /* Model selector */
+    .model-selector { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+    .model-option {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 12px 16px; cursor: pointer; transition: all .15s; user-select: none;
     }
-    .join-section { max-width: 720px; margin: 2rem auto 0; padding: 1.5rem 0; border-top: 1px solid var(--border); }
-    .join-section h2 { font-size: 1.1rem; font-weight: 600; color: var(--muted); margin: 0 0 1rem; }
-    .oneliner-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin: 1rem 0; overflow-x: auto; }
-    .oneliner { font-family: ui-monospace, monospace; font-size: 0.9rem; word-break: break-all; }
-    .join-section input { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 0.95rem; margin-bottom: 0.5rem; }
-    .join-section label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
-    .join-section .note { font-size: 0.85rem; color: var(--muted); margin-top: 1rem; }
-    .join-section a { color: var(--accent); }
-    .home-link { color: var(--accent); text-decoration: none; }
-    .home-link:hover { text-decoration: underline; }
+    .model-option:hover { border-color: var(--accent); }
+    .model-option.selected { border-color: var(--gold); background: rgba(245,197,66,.04); }
+    .model-option input[type=checkbox] { display: none; }
+    .model-checkbox {
+      width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 5px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s;
+    }
+    .model-option.selected .model-checkbox { background: var(--gold); border-color: var(--gold); }
+    .model-checkbox::after { content: '✓'; color: #0a0a0f; font-size: .75rem; font-weight: 800; display: none; }
+    .model-option.selected .model-checkbox::after { display: block; }
+    .model-info { flex: 1; }
+    .model-name { font-size: .9rem; font-weight: 700; }
+    .model-desc { font-family: var(--font-mono); font-size: .72rem; color: var(--muted); margin-top: 2px; }
+    .model-badge {
+      font-family: var(--font-mono); font-size: .68rem; padding: 3px 8px;
+      border-radius: 100px; border: 1px solid var(--border); color: var(--muted); flex-shrink: 0;
+    }
+    .model-option.selected .model-badge { border-color: var(--gold-dim); color: var(--gold); }
+    .model-min-warn { font-family: var(--font-mono); font-size: .75rem; color: var(--red); margin-top: 8px; display: none; }
+
+    .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-bottom: 20px; }
+    .cat-btn {
+      background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 10px 8px; font-family: var(--font-head); font-size: .82rem; font-weight: 700;
+      color: var(--muted); cursor: pointer; text-align: center; transition: all .15s;
+    }
+    .cat-btn:hover { border-color: var(--accent); color: var(--text); }
+    .cat-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(245,197,66,.06); }
+    .cat-icon { font-size: 1.2rem; display: block; margin-bottom: 4px; }
+
+    .mode-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .mode-btn {
+      flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 10px; font-family: var(--font-head); font-size: .85rem; font-weight: 700;
+      color: var(--muted); cursor: pointer; transition: all .15s; text-align: center;
+    }
+    .mode-btn.active { border-color: var(--accent); color: var(--text); background: rgba(79,124,255,.06); }
+
+    #question {
+      width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius);
+      color: var(--text); font-family: var(--font-head); font-size: 1rem;
+      padding: 16px 20px; resize: none; height: 100px; outline: none; transition: border-color .2s; line-height: 1.5;
+    }
+    #question::placeholder { color: var(--muted); }
+    #question:focus { border-color: var(--accent); }
+    #batchInput {
+      display: none; width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius);
+      color: var(--text); font-family: var(--font-mono); font-size: .85rem;
+      padding: 16px 20px; resize: vertical; min-height: 160px; outline: none; transition: border-color .2s; line-height: 1.7;
+    }
+    #batchInput::placeholder { color: var(--muted); }
+    #batchInput:focus { border-color: var(--accent); }
+    #batchInput.visible { display: block; }
+    .batch-hint { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); margin-top: 6px; }
+    .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+    .hint { font-size: .78rem; font-family: var(--font-mono); color: var(--muted); }
+    .btn-run {
+      background: var(--gold); color: #0a0a0f; border: none; border-radius: 8px;
+      font-family: var(--font-head); font-weight: 700; font-size: .95rem;
+      padding: 12px 28px; cursor: pointer; transition: opacity .15s, transform .1s;
+    }
+    .btn-run:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-run:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    #progress { margin-top: 24px; display: none; }
+    .progress-bar-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 100px; height: 6px; overflow: hidden; margin-bottom: 8px; }
+    .progress-bar-fill { height: 100%; background: var(--gold); border-radius: 100px; transition: width .4s ease; width: 0%; }
+    .progress-label { font-family: var(--font-mono); font-size: .78rem; color: var(--muted); text-align: center; }
+
+    #status { margin-top: 20px; text-align: center; font-family: var(--font-mono); font-size: .88rem; color: var(--muted); min-height: 24px; }
+    .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #results { margin-top: 36px; }
+    .results-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .results-toolbar h2 { font-size: 1rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+    .btn-export {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font-mono); font-size: .78rem;
+      padding: 8px 16px; cursor: pointer; transition: border-color .15s;
+    }
+    .btn-export:hover { border-color: var(--green); color: var(--green); }
+
+    .summary-bar {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 24px; flex-wrap: wrap;
+    }
+    .summary-stat { text-align: center; }
+    .summary-stat .val { font-size: 1.5rem; font-weight: 800; color: var(--gold); }
+    .summary-stat .lbl { font-size: .68rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+
+    .q-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; animation: fadeUp .4s ease both; }
+    .q-block-header { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; gap: 12px; }
+    .q-block-header:hover { background: var(--surface2); }
+    .q-num { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); flex-shrink: 0; }
+    .q-text { font-size: .9rem; font-weight: 700; flex: 1; }
+    .q-winner { font-family: var(--font-mono); font-size: .75rem; color: var(--gold); flex-shrink: 0; }
+    .q-chevron { color: var(--muted); font-size: .8rem; flex-shrink: 0; transition: transform .2s; }
+    .q-block.open .q-chevron { transform: rotate(180deg); }
+    .q-block-body { display: none; padding: 0 18px 18px; }
+    .q-block.open .q-block-body { display: block; }
+
+    .podium { display: grid; gap: 10px; margin-bottom: 16px; }
+    .podium-card {
+      background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap;
+    }
+    .podium-card.rank-1 { border-color: var(--gold-dim); background: rgba(245,197,66,.03); }
+    .podium-card.rank-2 { border-color: #555; }
+    .podium-card.rank-3 { border-color: #3a2a1a; opacity: .9; }
+    .p-medal { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    .p-info { flex: 1; min-width: 160px; }
+    .p-name { font-size: .88rem; font-weight: 700; }
+    .p-reasoning { font-family: var(--font-mono); font-size: .72rem; color: var(--muted); font-style: italic; margin-top: 3px; line-height: 1.4; }
+    .p-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .p-total { font-size: 1.5rem; font-weight: 800; min-width: 44px; text-align: right; }
+    .rank-1 .p-total { color: var(--gold); }
+    .rank-2 .p-total { color: var(--silver); }
+    .rank-3 .p-total { color: #cd7f32; }
+    .p-latency { font-family: var(--font-mono); font-size: .68rem; color: var(--muted); text-align: right; margin-top: 2px; }
+
+    .details-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 50%;
+      color: var(--muted); font-family: var(--font-mono); font-weight: 700; font-size: .85rem;
+      width: 26px; height: 26px; cursor: pointer; flex-shrink: 0;
+      transition: border-color .15s, color .15s; display: flex; align-items: center; justify-content: center;
+    }
+    .details-toggle:hover { border-color: var(--accent); color: var(--text); }
+    .details-toggle.open { color: var(--gold); border-color: var(--gold); }
+    .details-box { display: none; width: 100%; margin-top: 10px; padding: 12px 14px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); }
+    .details-box.open { display: block; }
+    .detail-row { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: .78rem; color: var(--muted); padding: 5px 0; border-bottom: 1px solid var(--border); text-transform: capitalize; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .d-label { display: flex; align-items: center; gap: 8px; }
+    .detail-row .d-bar { width: 80px; height: 5px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .detail-row .d-bar-fill { height: 100%; background: var(--accent); border-radius: 100px; }
+    .rank-1 .d-bar-fill { background: var(--gold); }
+    .detail-row .d-val { color: var(--text); font-weight: 700; min-width: 36px; text-align: right; }
+
+    .answer-toggle { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-family: var(--font-mono); font-size: .72rem; padding: 5px 10px; cursor: pointer; margin-top: 10px; transition: border-color .15s; display: inline-block; }
+    .answer-toggle:hover { border-color: var(--accent); color: var(--text); }
+    .answer-text { display: none; margin-top: 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--silver); line-height: 1.7; white-space: pre-wrap; background: #0a0a0f; border-radius: 8px; padding: 12px; border: 1px solid var(--border); max-height: 260px; overflow-y: auto; }
+    .answer-text.open { display: block; }
+    .error-msg { color: var(--red); font-family: var(--font-mono); font-size: .78rem; font-style: italic; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    footer { margin-top: 60px; text-align: center; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); }
   </style>
-  <script type="module" crossorigin src="/assets/arena-CWwrQGUx.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
-  <link rel="stylesheet" crossorigin href="/assets/style-CY8FZg7d.css">
 </head>
 <body>
+<div class="page">
   <header>
-    <h1>Agent Olympics</h1>
-    <p class="tagline">Run locally. One command. Leaderboard.</p>
-    <p class="tagline"><a class="home-link" href="/">Back to welcome page</a></p>
+    <div class="logo-tag">Agent Olympics · Business Evaluation Suite</div>
+    <h1>Find the right AI<br>for your business</h1>
+    <p class="subtitle">Paste your real questions. Models compete. Download the report.</p>
   </header>
-  <main>
-    <section class="heat-panel" id="heat-panel">
-      <div id="heat-winner-banner" class="heat-winner-banner" style="display: none;" role="status"></div>
-      <div class="heat-row">
-        <span class="heat-title" id="heat-title">Heat —</span>
-        <span class="heat-badge" id="heat-badge">WAITING</span>
-      </div>
-      <div class="heat-countdown" id="heat-countdown" style="display: none;"></div>
-      <p class="heat-detail" id="heat-registered"></p>
-      <p class="heat-detail" id="heat-submitted"></p>
-      <p class="heat-detail heat-hint" id="heat-hint"></p>
-      <div class="heat-register" id="heat-register-wrap" style="display: none;">
-        <label for="register-name">Register for this heat (optional)</label>
-        <div class="heat-register-row">
-          <input type="text" id="register-name" placeholder="Your team / agent name" />
-          <button type="button" id="register-btn">Register</button>
+
+  <div class="config-panel">
+    <h3>0 — Select models to compete</h3>
+    <div class="model-selector">
+      <label class="model-option selected" id="opt-gemini">
+        <input type="checkbox" checked data-model="gemini" />
+        <div class="model-checkbox"></div>
+        <div class="model-info">
+          <div class="model-name">Gemini 2.5 Flash</div>
+          <div class="model-desc">Google · Fast, multimodal, strong reasoning</div>
         </div>
-        <p class="register-message" id="register-message"></p>
-      </div>
-    </section>
-    <section class="steps-section">
-      <h2>How to test your agent</h2>
-      <ol class="steps-list">
-        <li>
-          <strong>Hosted site (e.g. Vercel):</strong> “Backend URL” below should point to the public Agent Olympics API (it may be pre-filled). You do not run the API on your laptop for visitors to see the leaderboard.
-          <br /><br />
-          <strong>Local dev:</strong> run the API yourself — <code>cd backend &amp;&amp; npm start</code> on <code>http://localhost:3001</code> (matches the Vite <code>/api</code> proxy).
-        </li>
-        <li>
-          Start your agent API and make sure it accepts POST JSON at your endpoint (example: <code>http://localhost:8080/task</code>).
-        </li>
-        <li>
-          From the <strong>repo root</strong> (folder that contains <code>packages/</code>), copy the command below, paste in Terminal, then watch the leaderboard.
-        </li>
-      </ol>
-    </section>
-    <section class="join-section" id="join-section">
-      <h2>Get your command</h2>
-      <p id="token-status">Loading token...</p>
-      <button type="button" id="retry-token-btn" style="display: none; margin-top: 0.5rem; padding: 0.4rem 0.8rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 0.85rem;">Retry token</button>
-      <div class="oneliner-wrap" id="oneliner-wrap" style="display: none;">
-        <code class="oneliner" id="oneliner"></code>
-      </div>
-      <button type="button" id="copy-btn" style="display: none; padding: 0.5rem 1rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">Copy command</button>
+        <div class="model-badge">Google</div>
+      </label>
+      <label class="model-option selected" id="opt-deepseek">
+        <input type="checkbox" checked data-model="deepseek" />
+        <div class="model-checkbox"></div>
+        <div class="model-info">
+          <div class="model-name">DeepSeek R1</div>
+          <div class="model-desc">DeepSeek · Chain-of-thought reasoning model</div>
+        </div>
+        <div class="model-badge">DeepSeek</div>
+      </label>
+      <label class="model-option selected" id="opt-qwen">
+        <input type="checkbox" checked data-model="qwen" />
+        <div class="model-checkbox"></div>
+        <div class="model-info">
+          <div class="model-name">Qwen 2.5 (72B)</div>
+          <div class="model-desc">Alibaba · Large multilingual model</div>
+        </div>
+        <div class="model-badge">Alibaba</div>
+      </label>
+    </div>
+    <div class="model-min-warn" id="modelWarn">⚠ Select at least 2 models to run a competition.</div>
 
-      <h2 style="margin-top: 2rem;">Your details</h2>
-      <label for="backend-url">Backend URL</label>
-      <input type="text" id="backend-url" value="http://localhost:3001" placeholder="http://localhost:3001" />
-      <label for="agent-url">Your agent URL (e.g. http://localhost:8080/task)</label>
-      <input type="text" id="agent-url" value="http://localhost:8080/task" placeholder="http://localhost:8080/task" />
-      <label for="agent-name">Agent name</label>
-      <input type="text" id="agent-name" value="My Agent" placeholder="My Agent" />
+    <h3 style="margin-top:20px">1 — Select your industry</h3>
+    <div class="category-grid">
+      <button class="cat-btn active" data-cat="General">   <span class="cat-icon">🌐</span>General</button>
+      <button class="cat-btn" data-cat="Finance">          <span class="cat-icon">💰</span>Finance</button>
+      <button class="cat-btn" data-cat="Legal">            <span class="cat-icon">⚖️</span>Legal</button>
+      <button class="cat-btn" data-cat="Medical">          <span class="cat-icon">🏥</span>Medical</button>
+      <button class="cat-btn" data-cat="Coding">           <span class="cat-icon">💻</span>Coding</button>
+      <button class="cat-btn" data-cat="Marketing">        <span class="cat-icon">📣</span>Marketing</button>
+      <button class="cat-btn" data-cat="Customer Support"> <span class="cat-icon">🎧</span>Support</button>
+      <button class="cat-btn" data-cat="HR">               <span class="cat-icon">👥</span>HR</button>
+    </div>
 
-      <p class="note">Run the command from the <strong>Encode-AI-Hackathon</strong> repo root (same folder as <code>packages/</code>). Your agent never leaves your machine. Token is one-time use and valid for ~90 minutes (demo-friendly).</p>
-    </section>
-    <section class="leaderboard">
-      <h2>Leaderboard</h2>
-      <div id="cards" class="cards"></div>
-      <p id="status" class="status"></p>
-    </section>
-  </main>
+    <h3>2 — Choose mode</h3>
+    <div class="mode-row">
+      <button class="mode-btn active" id="modeSingle">💬 Single question</button>
+      <button class="mode-btn" id="modeBatch">📋 Batch (multiple questions)</button>
+    </div>
+
+    <h3>3 — Enter your question(s)</h3>
+    <textarea id="question" placeholder="e.g. What are the tax implications of issuing equity to employees in the UK?"></textarea>
+    <textarea id="batchInput" placeholder="Enter one question per line, e.g.:&#10;What are the tax implications of issuing equity to employees?&#10;How should we handle GDPR compliance for customer data?&#10;What's the best way to structure a Series A term sheet?"></textarea>
+    <div class="batch-hint" id="batchHint" style="display:none">One question per line. Max 10 questions per batch.</div>
+    <div class="action-row">
+      <span class="hint">Ctrl+Enter to run</span>
+      <button class="btn-run" id="runBtn">⚡ Run evaluation</button>
+    </div>
+  </div>
+
+  <div id="progress">
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel"></div>
+  </div>
+  <div id="status"></div>
+  <div id="results"></div>
+  <footer>Agent Olympics · Built at Encode AI Hackathon · March 2026</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let running = false;
+let selectedCategory = 'General';
+let isBatch = false;
+let allResults = [];
+
+const API_BASE = window.location.hostname === 'localhost' 
+  ? '' 
+  : 'https://buildify-backend-56pv.onrender.com';
+
+const MODEL_CONFIG = {
+  gemini:   { label: 'Gemini 2.5 Flash', endpoint: API_BASE + '/api/gemini-query' },
+  deepseek: { label: 'DeepSeek R1',      endpoint: API_BASE + '/api/hf-query'     },
+  qwen:     { label: 'Qwen 2.5 (72B)',   endpoint: API_BASE + '/api/qwen-query'   },
+};
+
+// ── Model selector ────────────────────────────────────────────────────────────
+function getSelectedModels() {
+  return [...document.querySelectorAll('.model-option input[type=checkbox]')]
+    .filter(cb => cb.checked).map(cb => cb.dataset.model);
+}
+
+document.querySelectorAll('.model-option input[type=checkbox]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.closest('.model-option').classList.toggle('selected', cb.checked);
+    $('modelWarn').style.display = getSelectedModels().length < 2 ? 'block' : 'none';
+  });
+});
+
+// ── Category ──────────────────────────────────────────────────────────────────
+document.querySelectorAll('.cat-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCategory = btn.dataset.cat;
+    updatePlaceholder();
+  };
+});
+
+const PLACEHOLDERS = {
+  General: 'e.g. What are the main differences between agile and waterfall project management?',
+  Finance: 'e.g. What are the tax implications of issuing equity to employees in the UK?',
+  Legal: 'e.g. What clauses should be included in a standard SaaS subscription agreement?',
+  Medical: 'e.g. What are the contraindications for prescribing metformin to elderly patients?',
+  Coding: 'e.g. What is the best way to handle async error handling in Node.js?',
+  Marketing: 'e.g. What are the most effective B2B lead generation strategies in 2025?',
+  'Customer Support': 'e.g. How should we handle a customer who received a damaged product?',
+  HR: 'e.g. What are best practices for conducting a fair performance review?',
+};
+
+function updatePlaceholder() {
+  $('question').placeholder = PLACEHOLDERS[selectedCategory] || PLACEHOLDERS.General;
+}
+
+// ── Mode ──────────────────────────────────────────────────────────────────────
+$('modeSingle').onclick = () => {
+  isBatch = false;
+  $('modeSingle').classList.add('active'); $('modeBatch').classList.remove('active');
+  $('question').style.display = 'block'; $('batchInput').classList.remove('visible');
+  $('batchHint').style.display = 'none';
+};
+$('modeBatch').onclick = () => {
+  isBatch = true;
+  $('modeBatch').classList.add('active'); $('modeSingle').classList.remove('active');
+  $('question').style.display = 'none'; $('batchInput').classList.add('visible');
+  $('batchHint').style.display = 'block';
+};
+
+document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run(); });
+$('runBtn').onclick = run;
+
+function setStatus(html) { $('status').innerHTML = html; }
+function setProgress(pct, label) {
+  $('progress').style.display = 'block';
+  $('progressFill').style.width = pct + '%';
+  $('progressLabel').textContent = label;
+}
+
+// ── Local scoring fallback ────────────────────────────────────────────────────
+function localScore(answers) {
+  const result = {};
+  for (const [model, text] of Object.entries(answers)) {
+    if (!text || text.startsWith('Error:')) {
+      result[model] = { accuracy: 0, completeness: 0, clarity: 0, conciseness: 0, reasoning: 'Model failed to respond.' };
+      continue;
+    }
+    const words = text.trim().split(/\s+/).length;
+    const hasList = (text.match(/\n[-*•]|\n\d+\./g) || []).length;
+    const hasHeaders = (text.match(/#{1,3} /g) || []).length;
+    const sentences = (text.match(/[.!?]+/g) || []).length;
+    result[model] = {
+      accuracy: Math.min(25, 12 + Math.floor(sentences * 1.2)),
+      completeness: Math.min(25, 10 + Math.floor(words / 25)),
+      clarity: Math.min(25, 10 + hasList * 2 + hasHeaders * 3),
+      conciseness: words > 600 ? 10 : words > 300 ? 18 : words > 100 ? 22 : 15,
+      reasoning: 'Scored locally — judge unavailable.',
+    };
+  }
+  return result;
+}
+
+// ── API calls ─────────────────────────────────────────────────────────────────
+async function callModel(model, prompt) {
+  const { endpoint } = MODEL_CONFIG[model];
+  const t0 = Date.now();
+  const res = await fetch(endpoint, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json?.error || `${model} ${res.status}`);
+  return { text: json.text, latency: json.latency || (Date.now() - t0) };
+}
+
+async function judgeAnswers(question, answers, category, activeModels) {
+  const validModels = activeModels.filter(m => answers[m] && !answers[m].startsWith('Error:'));
+  const shuffled = [...validModels].sort(() => Math.random() - 0.5);
+  const labelNames = ['Model A', 'Model B', 'Model C'];
+  const mapping = {};
+  const parts = shuffled.map((m, i) => { mapping[labelNames[i]] = m; return `${labelNames[i]}: ${answers[m]}`; }).join('\n\n');
+
+  const expectedJson = Object.fromEntries(shuffled.map((_, i) => [labelNames[i], { accuracy: 0, completeness: 0, clarity: 0, conciseness: 0, reasoning: 'one sentence' }]));
+  const categoryNote = category !== 'General' ? `This is a ${category} question — weight domain accuracy heavily.` : '';
+
+  const judgePrompt = `You are an impartial judge evaluating AI responses for a business context. ${categoryNote}
+You do not know which AI produced each answer.
+Question: "${question}"
+Score each answer 0-25 on four criteria (total max 100):
+1. Accuracy - factually correct and domain-appropriate?
+2. Completeness - fully addresses the business need?
+3. Clarity - well-structured and professional?
+4. Conciseness - appropriately brief without missing key points?
+Answers:
+${parts}
+Respond ONLY with valid JSON, no markdown:
+${JSON.stringify(expectedJson)}`;
+
+  try {
+    const { text } = await callModel('gemini', judgePrompt);
+    const clean = text.replace(/```json|```/g, '').trim();
+    const labeled = JSON.parse(clean);
+    const result = {};
+    for (const [label, model] of Object.entries(mapping)) {
+      result[model] = labeled[label] || localScore({ [model]: answers[model] })[model];
+    }
+    return result;
+  } catch(e) { return localScore(answers); }
+}
+
+// ── Run one question ──────────────────────────────────────────────────────────
+async function runOne(question, category, idx, total, activeModels) {
+  setProgress(Math.round((idx / total) * 80), `Running question ${idx + 1} of ${total}...`);
+  setStatus(`<span class="spinner"></span>Q${idx+1}: Querying ${activeModels.length} models simultaneously...`);
+
+  const calls = activeModels.map(m => callModel(m, question));
+  const settled = await Promise.allSettled(calls);
+
+  const answers = {}, latencies = {};
+  activeModels.forEach((m, i) => {
+    answers[m]   = settled[i].status === 'fulfilled' ? settled[i].value.text    : `Error: ${settled[i].reason?.message}`;
+    latencies[m] = settled[i].status === 'fulfilled' ? settled[i].value.latency : 0;
+  });
+
+  setStatus(`<span class="spinner"></span>Q${idx+1}: Judging answers...`);
+  const scores = await judgeAnswers(question, answers, category, activeModels);
+
+  const MEDALS = ['🥇','🥈','🥉'];
+  const rows = activeModels.map(m => {
+    const s = scores[m] || { accuracy:0, completeness:0, clarity:0, conciseness:0, reasoning:'No score' };
+    return { model: m, label: MODEL_CONFIG[m].label, answer: answers[m], latency: latencies[m],
+      scores: s, total: s.accuracy + s.completeness + s.clarity + s.conciseness,
+      isError: (answers[m]||'').startsWith('Error:') };
+  }).sort((a,b) => b.total - a.total);
+  rows.forEach((r,i) => { r.rank = i+1; r.medal = MEDALS[i] || ''; });
+
+  return { question, rows, activeModels };
+}
+
+// ── Main run ──────────────────────────────────────────────────────────────────
+async function run() {
+  if (running) return;
+  const activeModels = getSelectedModels();
+  if (activeModels.length < 2) { $('modelWarn').style.display = 'block'; return; }
+
+  let questions = [];
+  if (isBatch) {
+    questions = $('batchInput').value.split('\n').map(q => q.trim()).filter(q => q.length > 4).slice(0, 10);
+    if (questions.length === 0) { setStatus('Please enter at least one question.'); return; }
+  } else {
+    const q = $('question').value.trim();
+    if (q.length < 5) { setStatus('Please enter a question first.'); return; }
+    questions = [q];
+  }
+
+  running = true; $('runBtn').disabled = true; $('results').innerHTML = ''; allResults = [];
+  $('progress').style.display = 'block';
+
+  for (let i = 0; i < questions.length; i++) {
+    const result = await runOne(questions[i], selectedCategory, i, questions.length, activeModels);
+    allResults.push(result);
+    renderResults(allResults, questions.length);
+  }
+
+  setProgress(100, `Evaluation complete — ${questions.length} question${questions.length>1?'s':''} analysed`);
+  setStatus(''); running = false; $('runBtn').disabled = false;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderResults(results, total) {
+  let summaryHtml = '';
+  if (total > 1 && results.length > 0) {
+    const wins = {};
+    results[0].activeModels.forEach(m => wins[m] = 0);
+    results.forEach(r => { if (!r.rows[0].isError) wins[r.rows[0].model] = (wins[r.rows[0].model]||0)+1; });
+    const topModel = Object.entries(wins).sort((a,b) => b[1]-a[1])[0][0];
+    const statHtml = Object.entries(wins).map(([m, w]) =>
+      `<div class="summary-stat"><div class="val">${w}</div><div class="lbl">${MODEL_CONFIG[m].label.split(' ')[0]} wins</div></div>`
+    ).join('');
+    summaryHtml = `
+      <div class="summary-bar">
+        <div class="summary-stat"><div class="val">${results.length}</div><div class="lbl">Questions run</div></div>
+        ${statHtml}
+        <div class="summary-stat"><div class="val" style="font-size:.9rem">${MODEL_CONFIG[topModel].label}</div><div class="lbl">Leading model</div></div>
+      </div>`;
+  }
+
+  const blocksHtml = results.map((r, qi) => {
+    const winner = r.rows[0];
+    const shortQ = r.question.length > 80 ? r.question.slice(0,77)+'...' : r.question;
+    const cardsHtml = r.rows.map((row) => `
+      <div class="podium-card rank-${row.rank}">
+        <div class="p-medal">${row.medal}</div>
+        <div class="p-info">
+          <div class="p-name">${row.label}</div>
+          ${row.isError
+            ? `<div class="error-msg">${escHtml(row.answer)}</div>`
+            : `<div class="p-reasoning">"${escHtml(row.scores.reasoning)}"</div>`}
+        </div>
+        ${row.isError ? '' : `
+          <div class="p-right">
+            <div>
+              <div class="p-total">${row.total}</div>
+              <div class="p-latency">${row.latency ? (row.latency/1000).toFixed(1)+'s' : '-'}</div>
+            </div>
+            <button class="details-toggle" onclick="toggleDetails(this)" title="Show breakdown">+</button>
+          </div>
+          <div class="details-box rank-${row.rank}">
+            ${['accuracy','completeness','clarity','conciseness'].map(d => `
+              <div class="detail-row">
+                <span class="d-label">${d}<div class="d-bar"><div class="d-bar-fill" style="width:${(row.scores[d]/25)*100}%"></div></div></span>
+                <span class="d-val">${row.scores[d]}/25</span>
+              </div>`).join('')}
+          </div>
+          <button class="answer-toggle" onclick="toggleAnswer(this)">Show answer</button>
+          <div class="answer-text">${escHtml(row.answer)}</div>`}
+      </div>`).join('');
+
+    return `
+      <div class="q-block" id="qblock-${qi}">
+        <div class="q-block-header" onclick="toggleBlock(${qi})">
+          <span class="q-num">Q${qi+1}</span>
+          <span class="q-text">${escHtml(shortQ)}</span>
+          ${!winner.isError ? `<span class="q-winner">🥇 ${winner.label.split(' ')[0]}</span>` : ''}
+          <span class="q-chevron">▼</span>
+        </div>
+        <div class="q-block-body"><div class="podium" style="grid-template-columns:1fr">${cardsHtml}</div></div>
+      </div>`;
+  }).join('');
+
+  const exportBtn = results.length > 0 ? `<button class="btn-export" onclick="exportCSV()">⬇ Download CSV report</button>` : '';
+  $('results').innerHTML = `
+    <div class="results-toolbar"><h2>Evaluation Results — ${selectedCategory}</h2>${exportBtn}</div>
+    ${summaryHtml}${blocksHtml}`;
+  if (results.length === 1) toggleBlock(0);
+}
+
+function toggleBlock(idx) { const b = document.getElementById('qblock-'+idx); if(b) b.classList.toggle('open'); }
+function toggleDetails(btn) {
+  const box = btn.closest('.podium-card').querySelector('.details-box');
+  box.classList.toggle('open'); btn.classList.toggle('open');
+  btn.textContent = btn.classList.contains('open') ? '−' : '+';
+}
+function toggleAnswer(btn) {
+  const box = btn.nextElementSibling;
+  box.classList.toggle('open');
+  btn.textContent = box.classList.contains('open') ? 'Hide answer' : 'Show answer';
+}
+
+function exportCSV() {
+  const activeModels = allResults[0]?.activeModels || ['gemini','deepseek','qwen'];
+  const headers = ['Question','Category','Winner',
+    ...activeModels.flatMap(m => [`${MODEL_CONFIG[m].label} Score`, `${MODEL_CONFIG[m].label} Accuracy`, `${MODEL_CONFIG[m].label} Completeness`, `${MODEL_CONFIG[m].label} Clarity`, `${MODEL_CONFIG[m].label} Conciseness`, `${MODEL_CONFIG[m].label} Latency(s)`, `${MODEL_CONFIG[m].label} Reasoning`])
+  ];
+  const rows = [headers];
+  allResults.forEach(r => {
+    const byModel = {};
+    r.rows.forEach(row => byModel[row.model] = row);
+    rows.push([
+      `"${r.question.replace(/"/g,'""')}"`, selectedCategory, r.rows[0].label,
+      ...activeModels.flatMap(m => {
+        const row = byModel[m];
+        return [row?.total||0, row?.scores.accuracy||0, row?.scores.completeness||0, row?.scores.clarity||0, row?.scores.conciseness||0,
+          row?.latency ? (row.latency/1000).toFixed(1) : '',
+          `"${(row?.scores.reasoning||'').replace(/"/g,'""')}"`];
+      })
+    ]);
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `agent-olympics-${selectedCategory.toLowerCase()}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
 </body>
 </html>

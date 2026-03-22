@@ -58,12 +58,11 @@
     }
     .err { color: #fca5a5; margin-top: 0.5rem; }
   </style>
-  <script type="module" crossorigin src="/assets/admin-D2XPl_4g.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <script type="module" crossorigin src="/assets/admin-DoCH5_Bw.js"></script>
 </head>
 <body>
   <h1>Agent Olympics — Heat admin</h1>
-  <p class="sub">Not linked from the public site. Set <code>ADMIN_TOKEN</code> below before the demo. Backend env: <code>HEATS_ADMIN_SECRET</code> must match.</p>
+  <p class="sub">Not linked from the public site. Set <code>VITE_ADMIN_TOKEN</code> in frontend env (same value as backend <code>HEATS_ADMIN_SECRET</code>).</p>
 
   <div class="grid">
     <button type="button" class="primary" id="btn-open">Open heat</button>
@@ -77,6 +76,6 @@
   <h2 style="font-size:1rem;margin:0 0 0.5rem;color:var(--muted)">Summary (auto every 2s)</h2>
   <pre class="summary" id="summary">Loading…</pre>
   <p class="err" id="err"></p>
-
+
 </body>
 </html>
