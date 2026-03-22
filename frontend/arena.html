@@ -294,10 +294,14 @@ let selectedCategory = 'General';
 let isBatch = false;
 let allResults = [];
 
+const API_BASE = window.location.hostname === 'localhost' 
+  ? '' 
+  : 'https://buildify-backend-56pv.onrender.com';
+
 const MODEL_CONFIG = {
-  gemini:   { label: 'Gemini 2.5 Flash', endpoint: '/api/gemini-query' },
-  deepseek: { label: 'DeepSeek R1',      endpoint: '/api/hf-query'     },
-  qwen:     { label: 'Qwen 2.5 (72B)',   endpoint: '/api/qwen-query'   },
+  gemini:   { label: 'Gemini 2.5 Flash', endpoint: API_BASE + '/api/gemini-query' },
+  deepseek: { label: 'DeepSeek R1',      endpoint: API_BASE + '/api/hf-query'     },
+  qwen:     { label: 'Qwen 2.5 (72B)',   endpoint: API_BASE + '/api/qwen-query'   },
 };
 
 // ── Model selector ────────────────────────────────────────────────────────────
